@@ -1,0 +1,58 @@
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../../api/axios'
+import DashboardLayout from '../../components/DashboardLayout'
+import ErrorMessage from '../../components/ErrorMessage'
+
+export default function CreateProject() {
+  const navigate = useNavigate()
+  const [form, setForm] = useState({ title: '', description: '', budget: '', deadline: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      await api.post('/projects', { ...form, budget: Number(form.budget) })
+      navigate('/client/projects')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create project')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <DashboardLayout>
+      <h1 className="page-title">Create Project</h1>
+      <form className="form-card" onSubmit={handleSubmit}>
+        <ErrorMessage message={error} />
+
+        <label>Project Title</label>
+        <input name="title" value={form.title} onChange={handleChange} required />
+
+        <label>Description</label>
+        <textarea name="description" rows={5} value={form.description} onChange={handleChange} required />
+
+        <div className="form-row">
+          <div>
+            <label>Budget ($)</label>
+            <input name="budget" type="number" min="1" step="0.01" value={form.budget} onChange={handleChange} required />
+          </div>
+          <div>
+            <label>Deadline</label>
+            <input name="deadline" type="date" value={form.deadline} onChange={handleChange} required />
+          </div>
+        </div>
+
+        <button className="btn btn-primary" type="submit" disabled={loading}>
+          {loading ? 'Creating...' : 'Create Project'}
+        </button>
+      </form>
+    </DashboardLayout>
+  )
+}
